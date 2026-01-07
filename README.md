@@ -60,7 +60,7 @@ Automate the activation and deactivation of URL filtering on your Asus router us
 ### Manual Execution
 
 The `run_router_config.sh` script handles virtual environment setup and execution:
-
+# EXECUTE THE COMMAND FOR THE FIRST TIME BY YOURSELF TO SETUP THE ENVIRONMENT, THEN CHANGE THE SHOULD_INSTALL VARIABLE IN THE SCRIPT TO FALSE
 **Activate URL filtering**:
 ```bash
 ./run_router_config.sh activate
