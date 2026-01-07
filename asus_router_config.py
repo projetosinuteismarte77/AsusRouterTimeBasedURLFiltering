@@ -23,10 +23,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from webdriver_manager.chrome import ChromeDriverManager
+from pyvirtualdisplay import Display
 
 
 class AsusRouterConfigurator:
@@ -51,27 +50,31 @@ class AsusRouterConfigurator:
         self.protocol = "https" if use_https else "http"
         self.driver = None
         self.wait = None
+        self.display = None
         
     def setup_driver(self):
-        """Set up and configure the Chrome WebDriver."""
-        chrome_options = Options()
-        
+        """Set up and configure the Firefox WebDriver with virtual display for headless operation."""
+        # Start virtual display for headless operation (required for Raspberry Pi)
         if self.headless:
-            chrome_options.add_argument("--headless")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--disable-dev-shm-usage")
+            self.display = Display(visible=0, size=(1024, 768))
+            self.display.start()
+            print("Virtual display started for headless operation")
         
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--ignore-certificate-errors")
-        chrome_options.add_argument("--ignore-ssl-errors")
+        firefox_options = Options()
         
-        # Install and setup ChromeDriver automatically
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Firefox-specific options
+        firefox_options.set_preference("browser.privatebrowsing.autostart", False)
+        firefox_options.set_preference("network.http.phishy-userpass-length", 255)
+        firefox_options.set_preference("network.automatic-ntlm-auth.trusted-uris", self.router_ip)
+        
+        # Accept insecure certificates (for routers with self-signed certs)
+        firefox_options.accept_insecure_certs = True
+        
+        # Initialize Firefox WebDriver
+        self.driver = webdriver.Firefox(options=firefox_options)
         self.wait = WebDriverWait(self.driver, 20)
         
-        print("Chrome WebDriver initialized successfully")
+        print("Firefox WebDriver initialized successfully")
         
     def login(self):
         """Log in to the router's WebUI."""
@@ -237,6 +240,9 @@ class AsusRouterConfigurator:
             if self.driver:
                 self.driver.quit()
                 print("Browser closed")
+            if self.display:
+                self.display.stop()
+                print("Virtual display stopped")
 
 
 def main():

@@ -13,7 +13,8 @@ Automate the activation and deactivation of URL filtering on your Asus router us
 ## Requirements
 
 - Python 3.6 or higher
-- Google Chrome or Chromium browser
+- Firefox or Iceweasel browser
+- Xvfb (X virtual framebuffer) for headless operation
 - An Asus router with WebUI access
 - Network access to your router
 
@@ -25,12 +26,24 @@ Automate the activation and deactivation of URL filtering on your Asus router us
    cd AsusRouterTimeBasedURLFiltering
    ```
 
-2. **Make the shell script executable**:
+2. **Install system dependencies** (Ubuntu/Debian):
+   ```bash
+   sudo apt-get update
+   sudo apt-get install python3-pip firefox xvfb
+   ```
+   
+   **For Raspberry Pi** (using Iceweasel):
+   ```bash
+   sudo apt-get update
+   sudo apt-get install python3-pip iceweasel xvfb
+   ```
+
+3. **Make the shell script executable**:
    ```bash
    chmod +x run_router_config.sh
    ```
 
-3. **Set up environment variables** (choose one method):
+4. **Set up environment variables** (choose one method):
 
    **Option A: Export in your shell**
    ```bash
@@ -168,8 +181,8 @@ AsusRouterTimeBasedURLFiltering/
    - Deactivates the virtual environment
 
 2. **Python Script** (`asus_router_config.py`):
-   - Uses Selenium WebDriver with Chrome
-   - Automatically downloads and manages ChromeDriver
+   - Uses Selenium WebDriver with Firefox
+   - Utilizes pyvirtualdisplay and Xvfb for headless operation on Raspberry Pi
    - Logs into your router's WebUI
    - Navigates to URL Filter settings
    - Toggles the URL filtering state
@@ -184,16 +197,25 @@ AsusRouterTimeBasedURLFiltering/
 
 ### Common Issues
 
-**Error: "Chrome WebDriver not found"**
-- The script automatically downloads ChromeDriver using `webdriver-manager`
-- Ensure you have an internet connection on first run
-- Make sure Chrome or Chromium is installed
+**Error: "Firefox WebDriver not found"**
+- Make sure Firefox (or Iceweasel on Raspberry Pi) is installed
+- Install geckodriver manually:
+  - Download from [GitHub Releases](https://github.com/mozilla/geckodriver/releases)
+  - Extract and move to `/usr/local/bin/geckodriver`
+  - Make it executable: `sudo chmod +x /usr/local/bin/geckodriver`
+- On some distributions, you can install via package manager:
+  - Debian/Ubuntu: `sudo apt-get install firefox-geckodriver` (if available)
+  - Or add geckodriver to your PATH
+
+**Error: "Display not found"**
+- Install Xvfb: `sudo apt-get install xvfb`
+- The script uses pyvirtualdisplay with Xvfb for headless operation
 
 **Error: "Could not find login element"**
 - Router WebUI structure may vary by model
 - Check your router's IP address is correct
 - Verify credentials are correct
-- Try running with `--no-headless` to see the browser
+- Try running with `--no-headless` to see the browser (requires X display)
 
 **Error: "Timeout while trying to log in"**
 - Check network connectivity to router
