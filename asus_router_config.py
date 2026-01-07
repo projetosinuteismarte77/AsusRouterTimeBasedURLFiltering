@@ -74,7 +74,7 @@ class AsusRouterConfigurator:
         
         # Get the geckodriver path using webdriver_manager
         # First try to use locally installed geckodriver from venv
-        venv_geckodriver = os.path.join(sys.prefix, 'bin', 'geckodriver')
+        venv_geckodriver = os.path.join('/snap', 'bin',, 'geckodriver')
         
         if os.path.exists(venv_geckodriver):
             print(f"Using locally installed geckodriver at: {venv_geckodriver}")
@@ -99,13 +99,13 @@ class AsusRouterConfigurator:
         try:
             # Navigate to router admin page
             #url = f"{self.protocol}://{self.router_ip}"
-            url = "http://www.asusrouter.com/Main_Login.asp"
+            url = f"http://{self.router_ip}/Main_Login.asp"
             print(f"Navigating to {url}")
             self.driver.get(url)
             
             # Wait for login page to load
             time.sleep(5)
-            
+            print("Current url (should be asusrouter.com/blablabla): ",self.driver.current_url)
             # Find and fill username field
             print("Attempting to log in...")
             username_field = self.driver.find_element(By.NAME, "login_username")
@@ -151,7 +151,7 @@ class AsusRouterConfigurator:
             # - Advanced_Firewall_Content.asp (older models)
             
             # Try the most common URL path first
-            filter_url = f"http://www.asusrouter.com/Advanced_URLFilter_Content.asp"
+            filter_url = "http://www.asusrouter.com/Advanced_URLFilter_Content.asp"
             self.driver.get(filter_url)
             
             time.sleep(5)
