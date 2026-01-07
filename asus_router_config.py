@@ -98,12 +98,13 @@ class AsusRouterConfigurator:
         """Log in to the router's WebUI."""
         try:
             # Navigate to router admin page
-            url = f"{self.protocol}://{self.router_ip}"
+            #url = f"{self.protocol}://{self.router_ip}"
+            url = "http://www.asusrouter.com/Main_Login.asp"
             print(f"Navigating to {url}")
             self.driver.get(url)
             
             # Wait for login page to load
-            time.sleep(2)
+            time.sleep(5)
             
             # Find and fill username field
             print("Attempting to log in...")
@@ -150,10 +151,10 @@ class AsusRouterConfigurator:
             # - Advanced_Firewall_Content.asp (older models)
             
             # Try the most common URL path first
-            filter_url = f"{self.protocol}://{self.router_ip}/Advanced_URLFilter_Content.asp"
+            filter_url = f"http://www.asusrouter.com/Advanced_URLFilter_Content.asp"
             self.driver.get(filter_url)
             
-            time.sleep(3)
+            time.sleep(5)
             print("Navigated to URL Filter page")
             print(f"Note: If this page is incorrect, the URL path may vary by router model.")
             print(f"      Check your router's admin interface for the correct path.")
