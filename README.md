@@ -31,12 +31,7 @@ Automate the activation and deactivation of URL filtering on your Asus router us
    sudo apt-get update
    sudo apt-get install python3-pip firefox xvfb
    ```
-   
-   **For Raspberry Pi** (using Iceweasel):
-   ```bash
-   sudo apt-get update
-   sudo apt-get install python3-pip iceweasel xvfb
-   ```
+   make sure firefox is installed via snap
 
 3. **Make the shell script executable**:
    ```bash
