@@ -88,7 +88,15 @@ source "${VENV_DIR}/bin/activate"
 
 # Install/update requirements only if venv was just created or requirements changed
 REQUIREMENTS_MARKER="${VENV_DIR}/.requirements_installed"
-if [ ! -f "$REQUIREMENTS_MARKER" ] || [ "$REQUIREMENTS" -nt "$REQUIREMENTS_MARKER" ]; then
+SHOULD_INSTALL=false
+
+if [ ! -f "$REQUIREMENTS_MARKER" ]; then
+    SHOULD_INSTALL=true
+elif [ -f "$REQUIREMENTS" ] && [ "$REQUIREMENTS" -nt "$REQUIREMENTS_MARKER" ]; then
+    SHOULD_INSTALL=true
+fi
+
+if [ "$SHOULD_INSTALL" = true ]; then
     print_info "Installing Python dependencies..."
     pip install --quiet --upgrade pip
     
