@@ -10,7 +10,7 @@ Usage:
     python asus_router_config.py deactivate [options]
 
 Environment Variables:
-    ROUTER_IP: IP address of the router (default: 192.168.1.1)
+    ROUTER_IP: IP address of the router (default: 192.168.0.1)
     ROUTER_USERNAME: Router admin username (default: admin)
     ROUTER_PASSWORD: Router admin password (required)
 """
@@ -152,58 +152,36 @@ class AsusRouterConfigurator:
             activate: True to enable, False to disable
             
         Note:
-            Element IDs vary by router model. Common variations:
-            - radio_url_enable_x_0/1 (most models)
-            - radio_URLFilter_enable_x_0/1 (some models)
-            - url_enable_x radio buttons (older models)
-            
-            If this script fails, run with --no-headless to see the page
-            structure and update element IDs accordingly.
+            Radio elements are accessed by name attribute, where the first element
+            in the list is Enable and the second is Disable.
         """
         try:
             action = "Activating" if activate else "Deactivating"
             print(f"{action} URL filtering...")
             
-            # Find the enable/disable radio button or toggle
-            # Try common element ID patterns used by different Asus router models
+            # Find radio buttons by name attribute
+            # The first element is Enable, the second is Disable
+            radio_buttons = self.wait.until(
+                EC.presence_of_all_elements_located((By.NAME, "url_enable_x"))
+            )
             
-            try:
-                if activate:
-                    # Enable URL filtering - try multiple element ID patterns
-                    enable_radio = self.wait.until(
-                        EC.element_to_be_clickable((By.ID, "radio_url_enable_x_0"))
-                    )
-                    enable_radio.click()
-                else:
-                    # Disable URL filtering
-                    disable_radio = self.wait.until(
-                        EC.element_to_be_clickable((By.ID, "radio_url_enable_x_1"))
-                    )
-                    disable_radio.click()
-            except (TimeoutException, NoSuchElementException):
-                # Try alternative element ID pattern
-                print("Primary element IDs not found, trying alternative patterns...")
-                if activate:
-                    enable_radio = self.wait.until(
-                        EC.element_to_be_clickable((By.ID, "radio_URLFilter_enable_x_0"))
-                    )
-                    enable_radio.click()
-                else:
-                    disable_radio = self.wait.until(
-                        EC.element_to_be_clickable((By.ID, "radio_URLFilter_enable_x_1"))
-                    )
-                    disable_radio.click()
+            if len(radio_buttons) < 2:
+                raise Exception(f"Expected at least 2 radio buttons, found {len(radio_buttons)}")
+            
+            if activate:
+                # Click the first radio button (Enable)
+                radio_buttons[0].click()
+            else:
+                # Click the second radio button (Disable)
+                radio_buttons[1].click()
             
             time.sleep(1)
             
-            # Apply changes - look for apply button
-            try:
-                apply_button = self.driver.find_element(By.ID, "applyButton")
-                apply_button.click()
-            except NoSuchElementException:
-                # Try alternative button selectors
-                apply_button = self.driver.find_element(By.XPATH, "//input[@value='Apply']")
-                apply_button.click()
+            # Apply changes - find apply button
+            apply_button = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//input[@value='Apply']"))
+            )
+            apply_button.click()
             
             time.sleep(3)
             
@@ -266,10 +244,10 @@ def main():
 Examples:
   %(prog)s activate
   %(prog)s deactivate
-  %(prog)s activate --router-ip 192.168.1.1 --username admin
+  %(prog)s activate --router-ip 192.168.0.1 --username admin
   
 Environment Variables:
-  ROUTER_IP        Router IP address (default: 192.168.1.1)
+  ROUTER_IP        Router IP address (default: 192.168.0.1)
   ROUTER_USERNAME  Router admin username (default: admin)
   ROUTER_PASSWORD  Router admin password (required if not provided via --password)
         """
@@ -283,8 +261,8 @@ Environment Variables:
     
     parser.add_argument(
         "--router-ip",
-        default=os.getenv("ROUTER_IP", "192.168.1.1"),
-        help="Router IP address (default: 192.168.1.1 or ROUTER_IP env var)"
+        default=os.getenv("ROUTER_IP", "192.168.0.1"),
+        help="Router IP address (default: 192.168.0.1 or ROUTER_IP env var)"
     )
     
     parser.add_argument(

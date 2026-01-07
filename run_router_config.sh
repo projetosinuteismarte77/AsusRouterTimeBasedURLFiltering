@@ -86,18 +86,23 @@ fi
 print_info "Activating virtual environment..."
 source "${VENV_DIR}/bin/activate"
 
-# Upgrade pip to latest version
-print_info "Upgrading pip..."
-pip install --quiet --upgrade pip
-
-# Install/update requirements
-if [ -f "$REQUIREMENTS" ]; then
-    print_info "Installing/updating Python dependencies..."
-    pip install --quiet -r "$REQUIREMENTS"
+# Install/update requirements only if venv was just created or requirements changed
+if [ ! -f "${VENV_DIR}/.requirements_installed" ] || [ "$REQUIREMENTS" -nt "${VENV_DIR}/.requirements_installed" ]; then
+    print_info "Installing Python dependencies..."
+    pip install --quiet --upgrade pip
+    
+    if [ -f "$REQUIREMENTS" ]; then
+        pip install --quiet -r "$REQUIREMENTS"
+    else
+        print_warning "Requirements file not found at: $REQUIREMENTS"
+        print_warning "Installing minimal dependencies..."
+        pip install --quiet selenium webdriver-manager
+    fi
+    
+    # Mark requirements as installed
+    touch "${VENV_DIR}/.requirements_installed"
 else
-    print_warning "Requirements file not found at: $REQUIREMENTS"
-    print_warning "Installing minimal dependencies..."
-    pip install --quiet selenium webdriver-manager
+    print_info "Dependencies already installed, skipping installation"
 fi
 
 # Check if router password is set

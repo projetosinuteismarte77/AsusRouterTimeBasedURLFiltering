@@ -25,7 +25,7 @@
 
 # Environment variables for the router configuration
 # These must be set for the cron jobs to work properly
-ROUTER_IP=192.168.1.1
+ROUTER_IP=192.168.0.1
 ROUTER_USERNAME=admin
 ROUTER_PASSWORD=your_router_password_here
 

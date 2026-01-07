@@ -35,14 +35,14 @@ Automate the activation and deactivation of URL filtering on your Asus router us
    **Option A: Export in your shell**
    ```bash
    export ROUTER_PASSWORD="your_router_password"
-   export ROUTER_IP="192.168.1.1"        # Optional, defaults to 192.168.1.1
+   export ROUTER_IP="192.168.0.1"        # Optional, defaults to 192.168.0.1
    export ROUTER_USERNAME="admin"         # Optional, defaults to admin
    ```
 
    **Option B: Create a `.env` file** (not included in git)
    ```bash
    echo 'export ROUTER_PASSWORD="your_router_password"' > .env
-   echo 'export ROUTER_IP="192.168.1.1"' >> .env
+   echo 'export ROUTER_IP="192.168.0.1"' >> .env
    echo 'export ROUTER_USERNAME="admin"' >> .env
    source .env
    ```
@@ -68,7 +68,7 @@ The `run_router_config.sh` script handles virtual environment setup and executio
 You can also pass options directly to the Python script:
 
 ```bash
-./run_router_config.sh activate --router-ip 192.168.1.1 --username admin --password your_password
+./run_router_config.sh activate --router-ip 192.168.0.1 --username admin --password your_password
 ./run_router_config.sh deactivate --no-headless  # Run with visible browser
 ./run_router_config.sh activate --use-https      # Use HTTPS instead of HTTP
 ```
@@ -109,7 +109,7 @@ Set up automatic activation and deactivation at specific times using cron.
 3. **Add the environment variables and cron entries**. Example:
    ```cron
    # Environment variables
-   ROUTER_IP=192.168.1.1
+   ROUTER_IP=192.168.0.1
    ROUTER_USERNAME=admin
    ROUTER_PASSWORD=your_router_password_here
    SCRIPT_PATH=/path/to/AsusRouterTimeBasedURLFiltering/run_router_config.sh
