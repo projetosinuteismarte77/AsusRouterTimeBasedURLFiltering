@@ -28,7 +28,6 @@ from selenium.webdriver.firefox.service import Service
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from pyvirtualdisplay import Display
 from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.core.os_manager import ChromeType
 
 
 class AsusRouterConfigurator:

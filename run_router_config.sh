@@ -134,6 +134,7 @@ if [ "$SHOULD_INSTALL" = true ]; then
         
         # Download to temporary location
         TMP_DIR=$(mktemp -d)
+        CURRENT_DIR=$(pwd)
         cd "$TMP_DIR"
         
         if command -v wget &> /dev/null; then
@@ -142,18 +143,19 @@ if [ "$SHOULD_INSTALL" = true ]; then
             curl -sL "$GECKODRIVER_URL" -o geckodriver.tar.gz
         else
             print_error "Neither wget nor curl is available. Cannot download geckodriver."
-            cd "$SCRIPT_DIR"
+            cd "$CURRENT_DIR"
             rm -rf "$TMP_DIR"
             exit 1
         fi
         
         # Extract and install
         tar -xzf geckodriver.tar.gz
+        mkdir -p "$GECKODRIVER_DIR"
         mv geckodriver "$GECKODRIVER_PATH"
         chmod +x "$GECKODRIVER_PATH"
         
         # Cleanup
-        cd "$SCRIPT_DIR"
+        cd "$CURRENT_DIR"
         rm -rf "$TMP_DIR"
         
         print_info "Geckodriver installed successfully at: $GECKODRIVER_PATH"
