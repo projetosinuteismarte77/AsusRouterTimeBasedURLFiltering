@@ -32,7 +32,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 class AsusRouterConfigurator:
     """Handles Asus router configuration via Selenium WebDriver."""
     
-    def __init__(self, router_ip, username, password, headless=True):
+    def __init__(self, router_ip, username, password, headless=True, use_https=False):
         """
         Initialize the configurator.
         
@@ -41,11 +41,14 @@ class AsusRouterConfigurator:
             username: Router admin username
             password: Router admin password
             headless: Run browser in headless mode (default: True)
+            use_https: Use HTTPS instead of HTTP (default: False)
         """
         self.router_ip = router_ip
         self.username = username
         self.password = password
         self.headless = headless
+        self.use_https = use_https
+        self.protocol = "https" if use_https else "http"
         self.driver = None
         self.wait = None
         
@@ -74,7 +77,7 @@ class AsusRouterConfigurator:
         """Log in to the router's WebUI."""
         try:
             # Navigate to router admin page
-            url = f"http://{self.router_ip}"
+            url = f"{self.protocol}://{self.router_ip}"
             print(f"Navigating to {url}")
             self.driver.get(url)
             
@@ -123,13 +126,18 @@ class AsusRouterConfigurator:
             
             # Navigate directly to the URL filter page
             # The exact URL may vary by router model, common paths:
-            # - http://router.asus.com/ParentalControl.asp
-            # - http://router.asus.com/Advanced_URLFilter_Content.asp
-            filter_url = f"http://{self.router_ip}/Advanced_URLFilter_Content.asp"
+            # - Advanced_URLFilter_Content.asp (most common)
+            # - ParentalControl.asp (some models)
+            # - Advanced_Firewall_Content.asp (older models)
+            
+            # Try the most common URL path first
+            filter_url = f"{self.protocol}://{self.router_ip}/Advanced_URLFilter_Content.asp"
             self.driver.get(filter_url)
             
             time.sleep(3)
             print("Navigated to URL Filter page")
+            print(f"Note: If this page is incorrect, the URL path may vary by router model.")
+            print(f"      Check your router's admin interface for the correct path.")
             return True
             
         except Exception as e:
@@ -142,28 +150,49 @@ class AsusRouterConfigurator:
         
         Args:
             activate: True to enable, False to disable
+            
+        Note:
+            Element IDs vary by router model. Common variations:
+            - radio_url_enable_x_0/1 (most models)
+            - radio_URLFilter_enable_x_0/1 (some models)
+            - url_enable_x radio buttons (older models)
+            
+            If this script fails, run with --no-headless to see the page
+            structure and update element IDs accordingly.
         """
         try:
             action = "Activating" if activate else "Deactivating"
             print(f"{action} URL filtering...")
             
             # Find the enable/disable radio button or toggle
-            # This will vary by router model, common element IDs/names:
-            # - radio_URLFilter_enable_x_0 (enable)
-            # - radio_URLFilter_enable_x_1 (disable)
+            # Try common element ID patterns used by different Asus router models
             
-            if activate:
-                # Enable URL filtering
-                enable_radio = self.wait.until(
-                    EC.element_to_be_clickable((By.ID, "radio_url_enable_x_0"))
-                )
-                enable_radio.click()
-            else:
-                # Disable URL filtering
-                disable_radio = self.wait.until(
-                    EC.element_to_be_clickable((By.ID, "radio_url_enable_x_1"))
-                )
-                disable_radio.click()
+            try:
+                if activate:
+                    # Enable URL filtering - try multiple element ID patterns
+                    enable_radio = self.wait.until(
+                        EC.element_to_be_clickable((By.ID, "radio_url_enable_x_0"))
+                    )
+                    enable_radio.click()
+                else:
+                    # Disable URL filtering
+                    disable_radio = self.wait.until(
+                        EC.element_to_be_clickable((By.ID, "radio_url_enable_x_1"))
+                    )
+                    disable_radio.click()
+            except (TimeoutException, NoSuchElementException):
+                # Try alternative element ID pattern
+                print("Primary element IDs not found, trying alternative patterns...")
+                if activate:
+                    enable_radio = self.wait.until(
+                        EC.element_to_be_clickable((By.ID, "radio_URLFilter_enable_x_0"))
+                    )
+                    enable_radio.click()
+                else:
+                    disable_radio = self.wait.until(
+                        EC.element_to_be_clickable((By.ID, "radio_URLFilter_enable_x_1"))
+                    )
+                    disable_radio.click()
             
             time.sleep(1)
             
@@ -284,6 +313,13 @@ Environment Variables:
         help="Run browser with visible GUI"
     )
     
+    parser.add_argument(
+        "--use-https",
+        action="store_true",
+        default=False,
+        help="Use HTTPS instead of HTTP (default: False)"
+    )
+    
     args = parser.parse_args()
     
     # Validate password
@@ -297,7 +333,8 @@ Environment Variables:
         router_ip=args.router_ip,
         username=args.username,
         password=args.password,
-        headless=args.headless
+        headless=args.headless,
+        use_https=args.use_https
     )
     
     # Perform configuration

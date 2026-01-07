@@ -70,7 +70,10 @@ You can also pass options directly to the Python script:
 ```bash
 ./run_router_config.sh activate --router-ip 192.168.1.1 --username admin --password your_password
 ./run_router_config.sh deactivate --no-headless  # Run with visible browser
+./run_router_config.sh activate --use-https      # Use HTTPS instead of HTTP
 ```
+
+**Security Note**: Use `--use-https` if your router supports HTTPS to encrypt credentials during transmission.
 
 ### Direct Python Execution
 
@@ -221,8 +224,9 @@ This script is designed for Asus routers but the WebUI element IDs may vary by m
 - **Never commit passwords** to version control
 - Store credentials in environment variables or secure credential managers
 - Restrict file permissions on scripts containing credentials
-- Use HTTPS if your router supports it (update URLs in script)
+- **Use HTTPS**: Add `--use-https` flag if your router supports it to encrypt credentials during transmission
 - Consider using router's API if available instead of WebUI automation
+- Review and customize element IDs for your specific router model
 
 ## Contributing
 

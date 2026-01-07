@@ -118,7 +118,7 @@ EXIT_CODE=$?
 echo ""
 if [ $EXIT_CODE -eq 0 ]; then
     print_info "Configuration completed successfully!"
-    print_info "URL filtering has been ${ACTION}d"
+    print_info "URL filtering has been ${ACTION}ed"
 else
     print_error "Configuration failed with exit code: $EXIT_CODE"
     print_error "Check the error messages above for details"
