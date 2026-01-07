@@ -202,10 +202,8 @@ class AsusRouterConfigurator:
             
             time.sleep(1)
             
-            # Apply changes - find apply button
-            apply_button = self.wait.until(
-                EC.element_to_be_clickable((By.XPATH, "//input[@value='Apply']"))
-            )
+            # Apply changes - find apply button (button is always present)
+            apply_button = self.driver.find_element(By.XPATH, "//input[@value='Apply']")
             apply_button.click()
             
             time.sleep(3)
