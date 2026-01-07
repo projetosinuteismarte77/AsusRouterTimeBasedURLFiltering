@@ -1,0 +1,102 @@
+# Crontab Configuration for Asus Router Time-Based URL Filtering
+#
+# This file contains example crontab entries to automatically activate and
+# deactivate URL filtering on your Asus router at specific times each day.
+#
+# IMPORTANT: Before using this configuration:
+# 1. Set the ROUTER_PASSWORD environment variable in your crontab
+# 2. Adjust the hours (currently 08:00 and 22:00) to your desired times
+# 3. Update the script path to match your installation location
+# 4. Optionally set ROUTER_IP and ROUTER_USERNAME if different from defaults
+#
+# To install this crontab:
+# 1. Edit this file with your specific times and paths
+# 2. Run: crontab -e
+# 3. Copy the relevant lines below into your crontab
+# 4. Save and exit
+#
+# To view your current crontab:
+#   crontab -l
+#
+# To remove your crontab:
+#   crontab -r
+#
+##############################################################################
+
+# Environment variables for the router configuration
+# These must be set for the cron jobs to work properly
+ROUTER_IP=192.168.0.1
+ROUTER_USERNAME=admin
+ROUTER_PASSWORD=your_router_password_here
+
+# Path to the script (UPDATE THIS to match your installation)
+SCRIPT_PATH=/home/runner/work/AsusRouterTimeBasedURLFiltering/AsusRouterTimeBasedURLFiltering/run_router_config.sh
+
+##############################################################################
+# CRON JOB EXAMPLES
+##############################################################################
+
+# Activate URL filtering at 8:00 AM every day
+# Format: minute hour day_of_month month day_of_week command
+0 8 * * * cd $(dirname $SCRIPT_PATH) && $SCRIPT_PATH activate >> /var/log/router_filter.log 2>&1
+
+# Deactivate URL filtering at 10:00 PM (22:00) every day
+0 22 * * * cd $(dirname $SCRIPT_PATH) && $SCRIPT_PATH deactivate >> /var/log/router_filter.log 2>&1
+
+##############################################################################
+# EXPLANATION OF CRON TIME FORMAT
+##############################################################################
+#
+# Cron uses 5 time fields:
+# ┌───────────── minute (0 - 59)
+# │ ┌───────────── hour (0 - 23)
+# │ │ ┌───────────── day of month (1 - 31)
+# │ │ │ ┌───────────── month (1 - 12)
+# │ │ │ │ ┌───────────── day of week (0 - 6) (Sunday = 0)
+# │ │ │ │ │
+# * * * * * command to execute
+#
+##############################################################################
+# ADDITIONAL EXAMPLES
+##############################################################################
+
+# Activate at 7:30 AM on weekdays only (Monday-Friday)
+# 30 7 * * 1-5 cd $(dirname $SCRIPT_PATH) && $SCRIPT_PATH activate >> /var/log/router_filter.log 2>&1
+
+# Deactivate at 11:00 PM on weekdays only (Monday-Friday)
+# 0 23 * * 1-5 cd $(dirname $SCRIPT_PATH) && $SCRIPT_PATH deactivate >> /var/log/router_filter.log 2>&1
+
+# Activate at 9:00 AM on weekends only (Saturday-Sunday)
+# 0 9 * * 0,6 cd $(dirname $SCRIPT_PATH) && $SCRIPT_PATH activate >> /var/log/router_filter.log 2>&1
+
+# Deactivate at midnight (00:00)
+# 0 0 * * * cd $(dirname $SCRIPT_PATH) && $SCRIPT_PATH deactivate >> /var/log/router_filter.log 2>&1
+
+##############################################################################
+# LOGGING
+##############################################################################
+#
+# The examples above redirect output to /var/log/router_filter.log
+# You can change this path or remove the redirection entirely.
+#
+# To disable logging:
+#   Remove the ">> /var/log/router_filter.log 2>&1" part
+#
+# To log to a different file:
+#   Replace /var/log/router_filter.log with your preferred path
+#
+# Note: Make sure the log directory exists and is writable
+#
+##############################################################################
+# TROUBLESHOOTING
+##############################################################################
+#
+# If cron jobs aren't running:
+# 1. Check cron service is running: systemctl status cron
+# 2. Check cron logs: grep CRON /var/log/syslog
+# 3. Verify script path is absolute (not relative)
+# 4. Ensure environment variables are set in crontab
+# 5. Test script manually first: $SCRIPT_PATH activate
+# 6. Check file permissions: ls -l $SCRIPT_PATH
+#
+##############################################################################
