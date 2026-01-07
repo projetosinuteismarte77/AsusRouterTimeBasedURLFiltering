@@ -108,6 +108,80 @@ if [ "$SHOULD_INSTALL" = true ]; then
         pip install --quiet selenium webdriver-manager
     fi
     
+    # Install geckodriver from Mozilla releases
+    print_info "Installing geckodriver from Mozilla releases..."
+    GECKODRIVER_VERSION="${GECKODRIVER_VERSION:-v0.36.0}"
+    GECKODRIVER_DIR="${VENV_DIR}/bin"
+    GECKODRIVER_PATH="${GECKODRIVER_DIR}/geckodriver"
+    
+    # Detect system architecture
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "x86_64" ]; then
+        GECKODRIVER_ARCH="linux64"
+    elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+        GECKODRIVER_ARCH="linux-aarch64"
+    elif [ "$ARCH" = "armv7l" ]; then
+        GECKODRIVER_ARCH="linux32"
+    else
+        print_warning "Unsupported architecture: $ARCH, defaulting to linux64"
+        GECKODRIVER_ARCH="linux64"
+    fi
+    
+    # Download geckodriver if not already present
+    if [ ! -f "$GECKODRIVER_PATH" ]; then
+        print_info "Downloading geckodriver ${GECKODRIVER_VERSION} for ${GECKODRIVER_ARCH}..."
+        GECKODRIVER_URL="https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-${GECKODRIVER_ARCH}.tar.gz"
+        
+        # Download to temporary location
+        TMP_DIR=$(mktemp -d)
+        CURRENT_DIR=$(pwd)
+        cd "$TMP_DIR"
+        
+        DOWNLOAD_SUCCESS=false
+        if command -v wget &> /dev/null; then
+            if wget -q "$GECKODRIVER_URL" -O geckodriver.tar.gz; then
+                DOWNLOAD_SUCCESS=true
+            fi
+        elif command -v curl &> /dev/null; then
+            if curl -sL "$GECKODRIVER_URL" -o geckodriver.tar.gz; then
+                DOWNLOAD_SUCCESS=true
+            fi
+        else
+            print_error "Neither wget nor curl is available. Cannot download geckodriver."
+            cd "$CURRENT_DIR"
+            rm -rf "$TMP_DIR"
+            exit 1
+        fi
+        
+        if [ "$DOWNLOAD_SUCCESS" = false ]; then
+            print_error "Failed to download geckodriver from: $GECKODRIVER_URL"
+            print_error "Please check your internet connection or verify the URL is correct."
+            cd "$CURRENT_DIR"
+            rm -rf "$TMP_DIR"
+            exit 1
+        fi
+        
+        # Extract and install
+        if ! tar -xzf geckodriver.tar.gz; then
+            print_error "Failed to extract geckodriver archive. The download may be corrupted."
+            cd "$CURRENT_DIR"
+            rm -rf "$TMP_DIR"
+            exit 1
+        fi
+        
+        mkdir -p "$GECKODRIVER_DIR"
+        mv geckodriver "$GECKODRIVER_PATH"
+        chmod +x "$GECKODRIVER_PATH"
+        
+        # Cleanup
+        cd "$CURRENT_DIR"
+        rm -rf "$TMP_DIR"
+        
+        print_info "Geckodriver installed successfully at: $GECKODRIVER_PATH"
+    else
+        print_info "Geckodriver already installed at: $GECKODRIVER_PATH"
+    fi
+    
     # Mark requirements as installed with current timestamp
     touch "$REQUIREMENTS_MARKER"
 else
