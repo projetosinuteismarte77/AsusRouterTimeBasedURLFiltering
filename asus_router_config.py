@@ -1,0 +1,312 @@
+#!/usr/bin/env python3
+"""
+Asus Router Time-Based URL Filtering Configuration Script
+
+This script uses Selenium to automatically configure URL filtering on an Asus router
+via its WebUI. It can activate or deactivate URL filtering based on command-line arguments.
+
+Usage:
+    python asus_router_config.py activate [options]
+    python asus_router_config.py deactivate [options]
+
+Environment Variables:
+    ROUTER_IP: IP address of the router (default: 192.168.1.1)
+    ROUTER_USERNAME: Router admin username (default: admin)
+    ROUTER_PASSWORD: Router admin password (required)
+"""
+
+import argparse
+import os
+import sys
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from webdriver_manager.chrome import ChromeDriverManager
+
+
+class AsusRouterConfigurator:
+    """Handles Asus router configuration via Selenium WebDriver."""
+    
+    def __init__(self, router_ip, username, password, headless=True):
+        """
+        Initialize the configurator.
+        
+        Args:
+            router_ip: Router IP address
+            username: Router admin username
+            password: Router admin password
+            headless: Run browser in headless mode (default: True)
+        """
+        self.router_ip = router_ip
+        self.username = username
+        self.password = password
+        self.headless = headless
+        self.driver = None
+        self.wait = None
+        
+    def setup_driver(self):
+        """Set up and configure the Chrome WebDriver."""
+        chrome_options = Options()
+        
+        if self.headless:
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+        
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--ignore-certificate-errors")
+        chrome_options.add_argument("--ignore-ssl-errors")
+        
+        # Install and setup ChromeDriver automatically
+        service = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        self.wait = WebDriverWait(self.driver, 20)
+        
+        print("Chrome WebDriver initialized successfully")
+        
+    def login(self):
+        """Log in to the router's WebUI."""
+        try:
+            # Navigate to router admin page
+            url = f"http://{self.router_ip}"
+            print(f"Navigating to {url}")
+            self.driver.get(url)
+            
+            # Wait for login page to load
+            time.sleep(2)
+            
+            # Find and fill username field
+            print("Attempting to log in...")
+            username_field = self.wait.until(
+                EC.presence_of_element_located((By.NAME, "login_username"))
+            )
+            username_field.clear()
+            username_field.send_keys(self.username)
+            
+            # Find and fill password field
+            password_field = self.driver.find_element(By.NAME, "login_passwd")
+            password_field.clear()
+            password_field.send_keys(self.password)
+            
+            # Submit login form
+            login_button = self.driver.find_element(By.CLASS_NAME, "button")
+            login_button.click()
+            
+            # Wait for dashboard to load
+            time.sleep(5)
+            
+            print("Successfully logged in to router")
+            return True
+            
+        except TimeoutException:
+            print("ERROR: Timeout while trying to log in")
+            return False
+        except NoSuchElementException as e:
+            print(f"ERROR: Could not find login element: {e}")
+            return False
+        except Exception as e:
+            print(f"ERROR: Unexpected error during login: {e}")
+            return False
+    
+    def navigate_to_url_filter(self):
+        """Navigate to the URL Filter configuration page."""
+        try:
+            # Asus routers typically have URL Filter under:
+            # Advanced Settings -> Firewall -> URL Filter
+            print("Navigating to URL Filter page...")
+            
+            # Navigate directly to the URL filter page
+            # The exact URL may vary by router model, common paths:
+            # - http://router.asus.com/ParentalControl.asp
+            # - http://router.asus.com/Advanced_URLFilter_Content.asp
+            filter_url = f"http://{self.router_ip}/Advanced_URLFilter_Content.asp"
+            self.driver.get(filter_url)
+            
+            time.sleep(3)
+            print("Navigated to URL Filter page")
+            return True
+            
+        except Exception as e:
+            print(f"ERROR: Failed to navigate to URL filter page: {e}")
+            return False
+    
+    def set_url_filter_state(self, activate):
+        """
+        Enable or disable URL filtering.
+        
+        Args:
+            activate: True to enable, False to disable
+        """
+        try:
+            action = "Activating" if activate else "Deactivating"
+            print(f"{action} URL filtering...")
+            
+            # Find the enable/disable radio button or toggle
+            # This will vary by router model, common element IDs/names:
+            # - radio_URLFilter_enable_x_0 (enable)
+            # - radio_URLFilter_enable_x_1 (disable)
+            
+            if activate:
+                # Enable URL filtering
+                enable_radio = self.wait.until(
+                    EC.element_to_be_clickable((By.ID, "radio_url_enable_x_0"))
+                )
+                enable_radio.click()
+            else:
+                # Disable URL filtering
+                disable_radio = self.wait.until(
+                    EC.element_to_be_clickable((By.ID, "radio_url_enable_x_1"))
+                )
+                disable_radio.click()
+            
+            time.sleep(1)
+            
+            # Apply changes - look for apply button
+            try:
+                apply_button = self.driver.find_element(By.ID, "applyButton")
+                apply_button.click()
+            except NoSuchElementException:
+                # Try alternative button selectors
+                apply_button = self.driver.find_element(By.XPATH, "//input[@value='Apply']")
+                apply_button.click()
+            
+            time.sleep(3)
+            
+            state = "activated" if activate else "deactivated"
+            print(f"URL filtering successfully {state}")
+            return True
+            
+        except TimeoutException:
+            print(f"ERROR: Timeout while trying to {action.lower()} URL filtering")
+            print("Note: Element IDs may vary by router model. Manual configuration may be needed.")
+            return False
+        except NoSuchElementException as e:
+            print(f"ERROR: Could not find URL filter element: {e}")
+            print("Note: The router WebUI structure may differ from expected. Check element IDs.")
+            return False
+        except Exception as e:
+            print(f"ERROR: Unexpected error while configuring URL filter: {e}")
+            return False
+    
+    def configure(self, activate):
+        """
+        Main configuration method.
+        
+        Args:
+            activate: True to activate filtering, False to deactivate
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            self.setup_driver()
+            
+            if not self.login():
+                return False
+            
+            if not self.navigate_to_url_filter():
+                return False
+            
+            if not self.set_url_filter_state(activate):
+                return False
+            
+            print("Configuration completed successfully!")
+            return True
+            
+        except Exception as e:
+            print(f"ERROR: Configuration failed: {e}")
+            return False
+        finally:
+            if self.driver:
+                self.driver.quit()
+                print("Browser closed")
+
+
+def main():
+    """Main entry point for the script."""
+    parser = argparse.ArgumentParser(
+        description="Configure Asus Router URL Filtering via Selenium",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s activate
+  %(prog)s deactivate
+  %(prog)s activate --router-ip 192.168.1.1 --username admin
+  
+Environment Variables:
+  ROUTER_IP        Router IP address (default: 192.168.1.1)
+  ROUTER_USERNAME  Router admin username (default: admin)
+  ROUTER_PASSWORD  Router admin password (required if not provided via --password)
+        """
+    )
+    
+    parser.add_argument(
+        "action",
+        choices=["activate", "deactivate"],
+        help="Action to perform: activate or deactivate URL filtering"
+    )
+    
+    parser.add_argument(
+        "--router-ip",
+        default=os.getenv("ROUTER_IP", "192.168.1.1"),
+        help="Router IP address (default: 192.168.1.1 or ROUTER_IP env var)"
+    )
+    
+    parser.add_argument(
+        "--username",
+        default=os.getenv("ROUTER_USERNAME", "admin"),
+        help="Router admin username (default: admin or ROUTER_USERNAME env var)"
+    )
+    
+    parser.add_argument(
+        "--password",
+        default=os.getenv("ROUTER_PASSWORD"),
+        help="Router admin password (default: ROUTER_PASSWORD env var)"
+    )
+    
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        default=True,
+        help="Run browser in headless mode (default: True)"
+    )
+    
+    parser.add_argument(
+        "--no-headless",
+        dest="headless",
+        action="store_false",
+        help="Run browser with visible GUI"
+    )
+    
+    args = parser.parse_args()
+    
+    # Validate password
+    if not args.password:
+        print("ERROR: Router password is required!")
+        print("Provide it via --password argument or ROUTER_PASSWORD environment variable")
+        sys.exit(1)
+    
+    # Create configurator instance
+    configurator = AsusRouterConfigurator(
+        router_ip=args.router_ip,
+        username=args.username,
+        password=args.password,
+        headless=args.headless
+    )
+    
+    # Perform configuration
+    activate = args.action == "activate"
+    success = configurator.configure(activate)
+    
+    # Exit with appropriate status code
+    sys.exit(0 if success else 1)
+
+
+if __name__ == "__main__":
+    main()
