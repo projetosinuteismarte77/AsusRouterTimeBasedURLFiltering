@@ -24,8 +24,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from pyvirtualdisplay import Display
+from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 
 
 class AsusRouterConfigurator:
@@ -70,8 +73,24 @@ class AsusRouterConfigurator:
         # Accept insecure certificates (for routers with self-signed certs)
         firefox_options.accept_insecure_certs = True
         
+        # Get the geckodriver path using webdriver_manager
+        # First try to use locally installed geckodriver from venv
+        venv_geckodriver = os.path.join(sys.prefix, 'bin', 'geckodriver')
+        
+        if os.path.exists(venv_geckodriver):
+            print(f"Using locally installed geckodriver at: {venv_geckodriver}")
+            geckodriver_path = venv_geckodriver
+        else:
+            # Fallback to webdriver_manager to download if not found locally
+            print("Locally installed geckodriver not found, using webdriver_manager to install...")
+            geckodriver_path = GeckoDriverManager().install()
+            print(f"Geckodriver installed via webdriver_manager at: {geckodriver_path}")
+        
+        # Create service with the geckodriver path
+        service = Service(executable_path=geckodriver_path)
+        
         # Initialize Firefox WebDriver
-        self.driver = webdriver.Firefox(options=firefox_options)
+        self.driver = webdriver.Firefox(service=service, options=firefox_options)
         self.wait = WebDriverWait(self.driver, 20)
         
         print("Firefox WebDriver initialized successfully")
