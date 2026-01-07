@@ -87,7 +87,8 @@ print_info "Activating virtual environment..."
 source "${VENV_DIR}/bin/activate"
 
 # Install/update requirements only if venv was just created or requirements changed
-if [ ! -f "${VENV_DIR}/.requirements_installed" ] || [ "$REQUIREMENTS" -nt "${VENV_DIR}/.requirements_installed" ]; then
+REQUIREMENTS_MARKER="${VENV_DIR}/.requirements_installed"
+if [ ! -f "$REQUIREMENTS_MARKER" ] || [ "$REQUIREMENTS" -nt "$REQUIREMENTS_MARKER" ]; then
     print_info "Installing Python dependencies..."
     pip install --quiet --upgrade pip
     
@@ -99,8 +100,8 @@ if [ ! -f "${VENV_DIR}/.requirements_installed" ] || [ "$REQUIREMENTS" -nt "${VE
         pip install --quiet selenium webdriver-manager
     fi
     
-    # Mark requirements as installed
-    touch "${VENV_DIR}/.requirements_installed"
+    # Mark requirements as installed with current timestamp
+    touch "$REQUIREMENTS_MARKER"
 else
     print_info "Dependencies already installed, skipping installation"
 fi

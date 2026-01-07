@@ -166,7 +166,11 @@ class AsusRouterConfigurator:
             )
             
             if len(radio_buttons) < 2:
-                raise Exception(f"Expected at least 2 radio buttons, found {len(radio_buttons)}")
+                raise Exception(
+                    f"URL filtering radio buttons not found or incomplete. "
+                    f"Expected 2 radio buttons with name=\"url_enable_x\", found {len(radio_buttons)}. "
+                    f"Please verify the router interface or check element selectors."
+                )
             
             if activate:
                 # Click the first radio button (Enable)
