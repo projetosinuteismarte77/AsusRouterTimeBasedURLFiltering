@@ -110,7 +110,7 @@ if [ "$SHOULD_INSTALL" = true ]; then
     
     # Install geckodriver from Mozilla releases
     print_info "Installing geckodriver from Mozilla releases..."
-    GECKODRIVER_VERSION="${GECKODRIVER_VERSION:-v0.34.0}"
+    GECKODRIVER_VERSION="${GECKODRIVER_VERSION:-v0.36.0}"
     GECKODRIVER_DIR="${VENV_DIR}/bin"
     GECKODRIVER_PATH="${GECKODRIVER_DIR}/geckodriver"
     
