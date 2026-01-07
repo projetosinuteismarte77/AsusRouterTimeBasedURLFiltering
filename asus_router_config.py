@@ -107,9 +107,7 @@ class AsusRouterConfigurator:
             
             # Find and fill username field
             print("Attempting to log in...")
-            username_field = self.wait.until(
-                EC.presence_of_element_located((By.NAME, "login_username"))
-            )
+            username_field = self.driver.find_element(By.NAME, "login_username")
             username_field.clear()
             username_field.send_keys(self.username)
             
@@ -182,9 +180,7 @@ class AsusRouterConfigurator:
             
             # Find radio buttons by name attribute
             # The first element is Enable, the second is Disable
-            radio_buttons = self.wait.until(
-                EC.presence_of_all_elements_located((By.NAME, "url_enable_x"))
-            )
+            radio_buttons = self.driver.find_elements(By.NAME, "url_enable_x")
             
             if len(radio_buttons) < 2:
                 raise Exception(
