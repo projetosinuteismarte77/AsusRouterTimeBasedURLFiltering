@@ -199,8 +199,13 @@ AsusRouterTimeBasedURLFiltering/
 
 **Error: "Firefox WebDriver not found"**
 - Make sure Firefox (or Iceweasel on Raspberry Pi) is installed
-- Install geckodriver: `sudo apt-get install firefox-geckodriver` or download from [GitHub](https://github.com/mozilla/geckodriver/releases)
-- Ensure geckodriver is in your PATH
+- Install geckodriver manually:
+  - Download from [GitHub Releases](https://github.com/mozilla/geckodriver/releases)
+  - Extract and move to `/usr/local/bin/geckodriver`
+  - Make it executable: `sudo chmod +x /usr/local/bin/geckodriver`
+- On some distributions, you can install via package manager:
+  - Debian/Ubuntu: `sudo apt-get install firefox-geckodriver` (if available)
+  - Or add geckodriver to your PATH
 
 **Error: "Display not found"**
 - Install Xvfb: `sudo apt-get install xvfb`

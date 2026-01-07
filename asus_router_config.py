@@ -56,7 +56,7 @@ class AsusRouterConfigurator:
         """Set up and configure the Firefox WebDriver with virtual display for headless operation."""
         # Start virtual display for headless operation (required for Raspberry Pi)
         if self.headless:
-            self.display = Display(visible=0, size=(800, 600))
+            self.display = Display(visible=0, size=(1024, 768))
             self.display.start()
             print("Virtual display started for headless operation")
         
